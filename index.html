@@ -2,10 +2,78 @@
     <head>
         <title>Game of Life</title>
         <script>
+            window.addEventListener('DOMContentLoaded', (event) => {
+                let renderBoardButton = document.getElementById('renderBoardButton');
+                let boardHeight, boardWidth;
+                renderBoardButton.onclick = function() {
+                    boardHeight = document.getElementById('boardHeight').value;
+                    boardWidth = document.getElementById('boardWidth').value;
+                    let state = getRandomState(boardWidth, boardHeight);
+                    renderState(state);
+                    // startScript();
+                    return false;
+                }
+            });
 
+            function startScript() {
+                boardState = [
+                    [1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1],
+                    [1,1,1,1,1,1,1],
+                    [1,0,1,1,1,1,1],
+                    [1,1,1,1,1,1,1]
+                ];
+                console.log(boardState);
+            }
+
+            function getDeadState(width=5, height=5) {
+                let state = new Array(height);
+                for (let y = 0; y < height; y++) {
+                    state[y] = new Array(width);
+                    for (let x = 0; x < width; x++) {
+                        state[y][x] = 0;
+                    }
+                }
+                return state;
+            }
+
+            function getRandomState(width=5, height=5) {
+                let state = getDeadState(width, height);
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < height; y++) {
+                        state[y][x] = Math.floor(Math.random() * 2);
+                    }
+                }
+                return state;
+            }
+
+            function renderState(state) {
+                let boardState = '';
+                for (let y = 0; y < state.length; y++) {
+                    for (let x = 0; x < state[0].length; x++) {
+                        if (state[y][x] == 1)
+                            boardState += '#';
+                        else
+                            boardState += '_';
+                    }
+                    boardState += '<br />\n';
+                }
+                console.log(boardState);
+                let board = document.getElementById('board');
+                board.innerHTML = boardState;
+                return boardState;
+            }
         </script>
     </head>
     <body>
+        <form>
+            <label for="boardWidth">Width</label> <input type="number" id="boardWidth" value="5" />
+            <label for="boardHeight">Height</label> <input type="number" id="boardHeight" value="5" />
+            <button id="renderBoardButton" accesskey="b">Render <u>B</u>oard</button>
+        </form>
+        <div id="board">
 
+        </div>
     </body>
 </html>
