@@ -101,6 +101,35 @@
                 board.innerHTML = boardState;
                 return boardState;
             }
+
+            function nextStateTests() {
+                let testInitState1 = [
+                    [0,0,0],
+                    [0,0,0],
+                    [0,0,0]
+                ];
+                let testNextState1 = [
+                    [0,0,0],
+                    [0,0,0],
+                    [0,0,0]
+                ];
+                // nextStateUnitTest(testInitState1, testNextState1, 'Test 1 Failed');
+                let testInitState2 = [
+                    [0,0,1],
+                    [0,1,1],
+                    [0,0,0]
+                ];
+                let testNextState2 = [
+                    [0,1,1],
+                    [0,1,1],
+                    [0,0,0]
+                ];
+                nextStateUnitTest(testInitState2, testNextState2, 'Test 2 Failed');
+            }
+            function nextStateUnitTest(initState, nextState, message) {
+                console.log('Testing:: Init:', initState, ' Expected:', nextState, ' Actual:', getNextState(initState));
+                console.assert(JSON.stringify(getNextState(initState)) == JSON.stringify(nextState), message);
+            }
         </script>
         <style>
             #board {
