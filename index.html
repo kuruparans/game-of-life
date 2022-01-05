@@ -58,7 +58,7 @@
 
             function getNextState(state) {
                 let newState = [...state];
-                console.log(newState);
+                // console.log(newState);
                 let height = state.length;
                 let width = state[0].length;
                 for (let y = 0; y < height; y++) {
@@ -73,13 +73,24 @@
                         if (y < height - 1)
                             numNeighbours += state[y + 1][x];
                         
+                        if (x > 0 && y > 0)
+                            numNeighbours += state[y - 1][x - 1];
+                        if (x > 0 && y < height - 1)
+                            numNeighbours += state[y + 1][x - 1];
+                        if (x < width - 1 && y > 0)
+                            numNeighbours += state[y - 1][x + 1];
+                        if (x < width - 1 && y < height - 1)
+                            numNeighbours += state[y + 1][x + 1];
+                        
                         if (state[y][x] == 1) {
                             if (numNeighbours <= 1 || numNeighbours >= 3)
                                 newState[y][x] = 0;
                             else
                                 newState[y][x] = 1;
-                        } else if (state[y][x] == 0 && numNeighbours == 3)
+                        } else if (state[y][x] === 0 && numNeighbours === 3) {
                             newState[y][x] = 1;
+                            console.log('rebirth', x, y, numNeighbours);
+                        }
                     }
                 }
                 return newState;
@@ -113,7 +124,7 @@
                     [0,0,0],
                     [0,0,0]
                 ];
-                // nextStateUnitTest(testInitState1, testNextState1, 'Test 1 Failed');
+                nextStateUnitTest(testInitState1, testNextState1, 'Test 1 Failed');
                 let testInitState2 = [
                     [0,0,1],
                     [0,1,1],
