@@ -56,32 +56,21 @@
                 return state;
             }
 
+            function cloneState(state) {
+                const newState = [...state];
+                newState.forEach((row, rowIndex) => newState[rowIndex] = [...row]);
+                return newState;
+            }
+
             function getNextState(state) {
-                let newState = [...state];
-                // console.log(newState);
+                let newState = cloneState(state);
                 let height = state.length;
                 let width = state[0].length;
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
-                        let numNeighbours = 0;
-                        if (x > 0)
-                            numNeighbours += state[y][x -1];
-                        if (x < width - 1)
-                            numNeighbours += state[y][x + 1];
-                        if (y > 0)
-                            numNeighbours += state[y - 1][x];
-                        if (y < height - 1)
-                            numNeighbours += state[y + 1][x];
-                        
-                        if (x > 0 && y > 0)
-                            numNeighbours += state[y - 1][x - 1];
-                        if (x > 0 && y < height - 1)
-                            numNeighbours += state[y + 1][x - 1];
-                        if (x < width - 1 && y > 0)
-                            numNeighbours += state[y - 1][x + 1];
-                        if (x < width - 1 && y < height - 1)
-                            numNeighbours += state[y + 1][x + 1];
-                        
+                        let numNeighbours = getNeighbours(x, y, state);
+                        // console.log('x: ', x, ' y:', y, ' neigh:', numNeighbours);
+
                         if (state[y][x] == 1) {
                             if (numNeighbours <= 1 || numNeighbours >= 3)
                                 newState[y][x] = 0;
@@ -89,11 +78,30 @@
                                 newState[y][x] = 1;
                         } else if (state[y][x] === 0 && numNeighbours === 3) {
                             newState[y][x] = 1;
-                            console.log('rebirth', x, y, numNeighbours);
+                            // console.log('rebirth', x, y, numNeighbours);
                         }
                     }
                 }
                 return newState;
+            }
+
+            function getNeighbours(x, y, state) {
+                let numNeighbours = 0;
+                let height = state.length;
+                let width = state[0].length;
+                for (let y_position = y - 1; y_position < y + 2; y_position++) {
+                    if (y_position < 0 || y_position >= height)
+                        continue;
+                    for (let x_position = x - 1; x_position < x + 2; x_position++) {
+                        if (x_position < 0 || x_position >= width)
+                            continue;
+                        if (x_position == x && y_position == y)
+                            continue;
+                        // console.log( 'POS:', x, y,' neighbour @', x_position, y_position, ' +', state[y_position][x_position], ' state:', state);
+                        numNeighbours += state[y_position][x_position];
+                    }
+                }
+                return numNeighbours;
             }
 
             function outputState(state) {
@@ -114,6 +122,7 @@
             }
 
             function nextStateTests() {
+                // TODO: Move to Jest
                 let testInitState1 = [
                     [0,0,0],
                     [0,0,0],
