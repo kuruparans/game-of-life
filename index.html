@@ -9,10 +9,13 @@
                 renderBoardButton.onclick = function() {
                     boardHeight = document.getElementById('boardHeight').value;
                     boardWidth = document.getElementById('boardWidth').value;
+                    let board = document.getElementById('board');
+                    board.style.setProperty('--board-rows', boardWidth);
+                    board.style.setProperty('--board-cols', boardHeight);
+                    
                     state = getRandomState(boardWidth, boardHeight);
                     outputState(state);
                     nextStateButton.disabled = false;
-                    // startScript();
                     return false;
                 }
                 nextStateButton.onclick = function() {
@@ -21,6 +24,17 @@
                     return false;
                 }
             });
+
+            function makeRows(rows, cols) {
+                let board = document.getElementById('board');
+                board.style.setProperty('--board-rows', rows);
+                board.style.setProperty('--board-cols', cols);
+                for (let c = 0; c < (rows * cols); c++) {
+                    let cell = document.createElement("div");
+                    cell.innerText = (c + 1);
+                    container.appendChild(cell).className = "grid-item";
+                }
+            }
 
             function startScript() {
                 boardState = [
@@ -34,6 +48,22 @@
                 console.log(boardState);
                 return boardState;
             }
+
+            function loadState(initialState) {
+                let toad = [
+                    [0,0,0,0,0,0],
+                    [0,0,0,0,0,0],
+                    [0,0,1,1,1,0],
+                    [0,1,1,1,0,0],
+                    [0,0,0,0,0,0],
+                    [0,0,0,0,0,0]
+                ];
+                let beacon = [];
+                let blinker = [];
+                let glider = [];
+                let gospelGliderGun = [];
+            }
+
 
             function getDeadState(width=5, height=5) {
                 let state = new Array(height);
@@ -69,7 +99,6 @@
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         let numNeighbours = getNeighbours(x, y, state);
-                        // console.log('x: ', x, ' y:', y, ' neigh:', numNeighbours);
 
                         if (state[y][x] == 1) {
                             if (numNeighbours <= 1 || numNeighbours >= 3)
@@ -78,7 +107,6 @@
                                 newState[y][x] = 1;
                         } else if (state[y][x] === 0 && numNeighbours === 3) {
                             newState[y][x] = 1;
-                            // console.log('rebirth', x, y, numNeighbours);
                         }
                     }
                 }
@@ -97,7 +125,6 @@
                             continue;
                         if (x_position == x && y_position == y)
                             continue;
-                        // console.log( 'POS:', x, y,' neighbour @', x_position, y_position, ' +', state[y_position][x_position], ' state:', state);
                         numNeighbours += state[y_position][x_position];
                     }
                 }
@@ -105,20 +132,21 @@
             }
 
             function outputState(state) {
-                let boardState = '';
+                let board = document.getElementById('board');
+                board.innerHTML = '';
+
                 for (let y = 0; y < state.length; y++) {
                     for (let x = 0; x < state[0].length; x++) {
+                        let cell = document.createElement('div');
+                        cell.dataset.col = y;
+                        cell.dataset.row = x;
                         if (state[y][x] == 1)
-                            boardState += '#';
+                            cell.className = 'cell cell-alive'
                         else
-                            boardState += '_';
+                            cell.className = 'cell cell-dead'
+                        board.appendChild(cell);
                     }
-                    boardState += '<br />\n';
                 }
-                console.log(boardState);
-                let board = document.getElementById('board');
-                board.innerHTML = boardState;
-                return boardState;
             }
 
             function nextStateTests() {
@@ -155,13 +183,40 @@
             #board {
                 font-family: 'Courier New', Courier, monospace;
             }
+
+            :root {
+                --board-cols: 1;
+                --board-rows: 1;
+            }
+
+            #board {
+                width: 50%;
+                display: grid;
+                /* grid-gap: 1em; */
+                grid-template-rows: repeat(var(--board-rows), 1fr);
+                grid-template-columns: repeat(var(--board-cols), 1fr);
+            }
+
+            .cell {
+                padding: 0em;
+                border: 1px solid rgb(235, 235, 235);
+                text-align: center;
+                aspect-ratio: 1;
+            }
+            .cell-dead {
+                background-color: white;
+            }
+            .cell-alive {
+                background-color: rgb(129, 129, 129);
+            }
+
         </style>
     </head>
     <body>
         <form>
             <label for="boardWidth">Width</label> <input type="number" id="boardWidth" value="5" />
             <label for="boardHeight">Height</label> <input type="number" id="boardHeight" value="5" />
-            <button id="renderBoardButton" accesskey="b">Render <u>B</u>oard</button> 
+            <button id="renderBoardButton" accesskey="r">Render <u>R</u>andom Board</button> 
             <button id="nextState" accesskey="n" disabled><u>N</u>ext State</button>
         </form>
         <div id="board">
@@ -169,3 +224,10 @@
         </div>
     </body>
 </html>
+<!-- 
+    TODO:
+    Play/stop button - infinite loop
+    Add option for von Neumann Neighbourhood scoring vs Moore
+    Add option to load other items
+    Add option to edit grid by clicking on square
+ -->
