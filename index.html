@@ -40,7 +40,6 @@
                                 clearInterval(runningGameInterval);
                                 stopGameButton.style.display = 'none';
                                 runGameButton.style.display = 'inline';
-                                console.log('game done, dead');
                             }
                         }
                         , 1000);
@@ -49,10 +48,10 @@
                     return false;
                 };
                 stopGameButton.onclick = function() {
-                    console.log('stopped');
                     clearInterval(runningGameInterval);
                     stopGameButton.style.display = 'none';
                     runGameButton.style.display = 'inline';
+                    nextStateButton.disabled = false;
                     return false;
                 }
             });
@@ -177,9 +176,18 @@
                         cell.dataset.col = y;
                         cell.dataset.row = x;
                         if (state[y][x] == 1)
-                            cell.className = 'cell cell-alive'
+                            cell.className = 'cell cell-alive';
                         else
-                            cell.className = 'cell cell-dead'
+                            cell.className = 'cell cell-dead';
+                        cell.onclick = () => {
+                            if (state[y][x] == 1)
+                                state[y][x] = 0;
+                            else
+                                state[y][x] = 1;
+                            
+                            outputState(state);
+                            return false;
+                        }
                         board.appendChild(cell);
                     }
                 }
@@ -274,5 +282,4 @@
     TODO:
     Add option for von Neumann Neighbourhood scoring vs Moore
     Add option to load other items
-    Add option to edit grid by clicking on square
  -->
