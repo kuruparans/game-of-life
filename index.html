@@ -5,36 +5,57 @@
             window.addEventListener('DOMContentLoaded', (event) => {
                 let renderBoardButton = document.getElementById('renderBoardButton');
                 let nextStateButton = document.getElementById('nextState');
-                let boardHeight, boardWidth, state;
+                let runGameButton = document.getElementById('runGame');
+                let stopGameButton = document.getElementById('stopGame');
+
+                let state;
+                let runningGameInterval;
+
                 renderBoardButton.onclick = function() {
-                    boardHeight = document.getElementById('boardHeight').value;
-                    boardWidth = document.getElementById('boardWidth').value;
+                    let boardHeight = document.getElementById('boardHeight').value;
+                    let boardWidth = document.getElementById('boardWidth').value;
                     let board = document.getElementById('board');
                     board.style.setProperty('--board-rows', boardWidth);
                     board.style.setProperty('--board-cols', boardHeight);
                     
                     state = getRandomState(boardWidth, boardHeight);
                     outputState(state);
+
                     nextStateButton.disabled = false;
+                    runGameButton.disabled = false;
                     return false;
-                }
+                };
                 nextStateButton.onclick = function() {
                     state = getNextState(state);
                     outputState(state);
                     return false;
+                };
+                runGameButton.onclick = function() {
+                    nextStateButton.disabled = true;
+                    runningGameInterval = setInterval(
+                        () => {
+                            state = getNextState(state);
+                            outputState(state);
+                            if (isDeadState(state)) {
+                                clearInterval(runningGameInterval);
+                                stopGameButton.style.display = 'none';
+                                runGameButton.style.display = 'inline';
+                                console.log('game done, dead');
+                            }
+                        }
+                        , 1000);
+                    runGameButton.style.display = 'none';
+                    stopGameButton.style.display = 'inline';
+                    return false;
+                };
+                stopGameButton.onclick = function() {
+                    console.log('stopped');
+                    clearInterval(runningGameInterval);
+                    stopGameButton.style.display = 'none';
+                    runGameButton.style.display = 'inline';
+                    return false;
                 }
             });
-
-            function makeRows(rows, cols) {
-                let board = document.getElementById('board');
-                board.style.setProperty('--board-rows', rows);
-                board.style.setProperty('--board-cols', cols);
-                for (let c = 0; c < (rows * cols); c++) {
-                    let cell = document.createElement("div");
-                    cell.innerText = (c + 1);
-                    container.appendChild(cell).className = "grid-item";
-                }
-            }
 
             function startScript() {
                 boardState = [
@@ -92,13 +113,23 @@
                 return newState;
             }
 
+            function isDeadState(state) {
+                let stateSum = state.reduce((prevRow, curRow) => prevRow.concat(curRow)).reduce((prevCell, curCell) => prevCell + curCell)
+                if (stateSum == 0)
+                    return true;
+                else
+                    return false;
+            }
+
             function getNextState(state) {
                 let newState = cloneState(state);
                 let height = state.length;
                 let width = state[0].length;
+                let neighbourhoodType = document.getElementById('neighbourhoodType').value;
+
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
-                        let numNeighbours = getNeighbours(x, y, state);
+                        let numNeighbours = getNeighbours(x, y, state, neighbourhoodType);
 
                         if (state[y][x] == 1) {
                             if (numNeighbours <= 1 || numNeighbours >= 3)
@@ -113,20 +144,25 @@
                 return newState;
             }
 
-            function getNeighbours(x, y, state) {
+            function getNeighbours(x, y, state, neighbourhoodType = 'moore') {
                 let numNeighbours = 0;
                 let height = state.length;
                 let width = state[0].length;
-                for (let y_position = y - 1; y_position < y + 2; y_position++) {
-                    if (y_position < 0 || y_position >= height)
-                        continue;
-                    for (let x_position = x - 1; x_position < x + 2; x_position++) {
-                        if (x_position < 0 || x_position >= width)
+
+                if (neighbourhoodType == 'moore') {
+                    for (let y_position = y - 1; y_position < y + 2; y_position++) {
+                        if (y_position < 0 || y_position >= height)
                             continue;
-                        if (x_position == x && y_position == y)
-                            continue;
-                        numNeighbours += state[y_position][x_position];
+                        for (let x_position = x - 1; x_position < x + 2; x_position++) {
+                            if (x_position < 0 || x_position >= width)
+                                continue;
+                            if (x_position == x && y_position == y)
+                                continue;
+                            numNeighbours += state[y_position][x_position];
+                        }
                     }
+                } else if (neighbourhoodType == 'neumann') {
+                    // TODO : add von Neumann calc
                 }
                 return numNeighbours;
             }
@@ -196,6 +232,9 @@
                 grid-template-rows: repeat(var(--board-rows), 1fr);
                 grid-template-columns: repeat(var(--board-cols), 1fr);
             }
+            #stopGame {
+                display: none;
+            }
 
             .cell {
                 padding: 0em;
@@ -216,8 +255,15 @@
         <form>
             <label for="boardWidth">Width</label> <input type="number" id="boardWidth" value="5" />
             <label for="boardHeight">Height</label> <input type="number" id="boardHeight" value="5" />
+            <label for="neighbourhoodType">Neighbourhood Type: </label>
+            <select id="neighbourhoodType" name="neighbourhoodType">
+                <option value="moore">Moore</option>
+                <option value="neumann">von Neumann</option>
+            </select>
             <button id="renderBoardButton" accesskey="r">Render <u>R</u>andom Board</button> 
             <button id="nextState" accesskey="n" disabled><u>N</u>ext State</button>
+            <button id="runGame" accesskey="g" disabled>Run <u>G</u>ame</button>
+            <button id="stopGame" accesskey="g">Stop <u>G</u>ame</button>
         </form>
         <div id="board">
 
@@ -226,7 +272,6 @@
 </html>
 <!-- 
     TODO:
-    Play/stop button - infinite loop
     Add option for von Neumann Neighbourhood scoring vs Moore
     Add option to load other items
     Add option to edit grid by clicking on square
