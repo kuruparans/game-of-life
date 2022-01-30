@@ -2,18 +2,17 @@
     <head>
         <title>Game of Life</title>
         <script>
-            let state; // TODO: refactor to remove global vars
-
             window.addEventListener('DOMContentLoaded', (event) => {
                 let renderBoardButton = document.getElementById('renderBoardButton');
                 let nextStateButton = document.getElementById('nextState');
                 let runGameButton = document.getElementById('runGame');
                 let stopGameButton = document.getElementById('stopGame');
 
-                // let state;
+                let state;
                 let runningGameInterval;
 
-                renderBoardButton.onclick = function() {
+                renderBoardButton.addEventListener('click', function(event) {
+                    event.preventDefault();
                     let boardHeight = document.getElementById('boardHeight').value;
                     let boardWidth = document.getElementById('boardWidth').value;
                     let board = document.getElementById('board');
@@ -25,14 +24,14 @@
 
                     nextStateButton.disabled = false;
                     runGameButton.disabled = false;
-                    return false;
-                };
-                nextStateButton.onclick = function() {
+                });
+                nextStateButton.addEventListener('click', function(event) {
+                    event.preventDefault();
                     state = getNextState(state);
                     outputState(state);
-                    return false;
-                };
-                runGameButton.onclick = function() {
+                });
+                runGameButton.addEventListener('click', function(event) {
+                    event.preventDefault();
                     nextStateButton.disabled = true;
                     runningGameInterval = setInterval(
                         () => {
@@ -47,15 +46,14 @@
                         , 1000);
                     runGameButton.style.display = 'none';
                     stopGameButton.style.display = 'inline';
-                    return false;
-                };
-                stopGameButton.onclick = function() {
+                });
+                stopGameButton.addEventListener('click', function(event) {
+                    event.preventDefault();
                     clearInterval(runningGameInterval);
                     stopGameButton.style.display = 'none';
                     runGameButton.style.display = 'inline';
                     nextStateButton.disabled = false;
-                    return false;
-                }
+                });
             });
 
             function getDeadState(width=5, height=5) {
@@ -117,25 +115,34 @@
                 return newState;
             }
 
-            function getNeighbours(x, y, state, neighbourhoodType = 'moore') {
+            function getNeighbours(centralCellX, centralCellY, state, neighbourhoodType = 'moore') {
                 let numNeighbours = 0;
                 let height = state.length;
                 let width = state[0].length;
 
                 if (neighbourhoodType == 'moore') {
-                    for (let y_position = y - 1; y_position < y + 2; y_position++) {
-                        if (y_position < 0 || y_position >= height)
+                    for (let neighbourCellY = centralCellY - 1; neighbourCellY < centralCellY + 2; neighbourCellY++) {
+                        if (neighbourCellY < 0 || neighbourCellY >= height)
                             continue;
-                        for (let x_position = x - 1; x_position < x + 2; x_position++) {
-                            if (x_position < 0 || x_position >= width)
+                        for (let neighbourCellX = centralCellX - 1; neighbourCellX < centralCellX + 2; neighbourCellX++) {
+                            if (neighbourCellX < 0 || neighbourCellX >= width)
                                 continue;
-                            if (x_position == x && y_position == y)
+                            if (neighbourCellX == centralCellX && neighbourCellY == centralCellY)
                                 continue;
-                            numNeighbours += state[y_position][x_position];
+                            numNeighbours += state[neighbourCellY][neighbourCellX];
                         }
                     }
                 } else if (neighbourhoodType == 'neumann') {
-                    // TODO : add von Neumann calc
+                    for (let neighbourCellY = centralCellY - 2; neighbourCellY < centralCellY + 3; neighbourCellY++) {
+                        if (neighbourCellY < 0 || neighbourCellY >= height)
+                            continue;
+                        numNeighbours += state[neighbourCellY][centralCellX];
+                    }
+                    for (let neighbourCellX = centralCellX - 2; neighbourCellX < centralCellX + 3; neighbourCellX++) {
+                        if (neighbourCellX < 0 || neighbourCellX >= width || neighbourCellX == centralCellX)
+                            continue;
+                        numNeighbours += state[centralCellY][neighbourCellX];
+                    }
                 }
                 return numNeighbours;
             }
@@ -149,8 +156,20 @@
                         let cell = document.createElement('div');
                         cell.dataset.col = y;
                         cell.dataset.row = x;
-                        cell.setAttribute('ondrop', 'drop(event)');
-                        cell.setAttribute('ondragover', 'allowDrop(event)');
+                        cell.addEventListener('drop', function(event) {
+                            event.preventDefault();
+                            let patternType = event.dataTransfer.getData('patternType');
+                            loadPattern(x, y, state, patternType);
+                        });
+                        cell.addEventListener('dragover', function(event) {
+                            event.preventDefault();
+                        });
+                        cell.addEventListener('dragenter', function(event) {
+                            event.target.classList.add('cell-hover');
+                        });
+                        cell.addEventListener('dragleave', function(event) {
+                            event.target.classList.remove('cell-hover');
+                        });
                         if (state[y][x] == 1)
                             cell.className = 'cell cell-alive';
                         else
@@ -169,21 +188,11 @@
                 }
             }
 
-            function allowDrop(event) {
-                event.preventDefault();
-            }
-            function drop(event) {
-                event.preventDefault();
-                let patternType = event.dataTransfer.getData('patternType');
-                let cell = event.target;
-                loadPattern(parseInt(cell.dataset.row), parseInt(cell.dataset.col), patternType);
-            }
             function drag(event) {
                 event.dataTransfer.setData('patternType', event.target.id)
             }
 
-            function loadPattern(targetPositionX, targetPositionY, patternType) {
-                // TODO: refactor to not use global state
+            function loadPattern(targetPositionX, targetPositionY, state, patternType) {
                 let boardHeight = state.length;
                 let boardWidth = state[0].length;
                 let patterns = {};
@@ -208,6 +217,10 @@
                     [0, 1, 1]
                 ];
                 pattern = patterns[patternType];
+                if (!pattern) {
+                    console.error('No pattern found with ID: ', patternType);
+                    return;
+                }
                 patternHeight = pattern.length;
                 patternWidth = pattern[0].length;
                 for (let y = 0; y < patternHeight; y++) {
@@ -286,6 +299,9 @@
             .cell-alive {
                 background-color: rgb(129, 129, 129);
             }
+            .cell-hover {
+                background-color: rgb(201, 76, 38);
+            }
 
         </style>
     </head>
@@ -303,7 +319,7 @@
             <button id="nextState" accesskey="n" disabled><u>N</u>ext State</button>
             <button id="runGame" accesskey="g" disabled>Run <u>G</u>ame</button>
             <button id="stopGame" accesskey="g">Stop <u>G</u>ame</button>
-            Patterns (Drag 'n Drop): <a id="patternToad" draggable="true" ondragstart="drag(event)">Toad</a> <a id="patternBeacon" draggable="true" ondragstart="drag(event)">Beacon</a> <a id="patternBlinker" draggable="true" ondragstart="drag(event)">Blinker</a> <a id="patternGlider" draggable="true" ondragstart="drag(event)">Glider</a>
+            <div id="patterns">Patterns (Drag 'n Drop): <a id="patternToad" draggable="true" ondragstart="drag(event)">Toad</a> <a id="patternBeacon" draggable="true" ondragstart="drag(event)">Beacon</a> <a id="patternBlinker" draggable="true" ondragstart="drag(event)">Blinker</a> <a id="patternGlider" draggable="true" ondragstart="drag(event)">Glider</a></div>
         </form>
         <div id="board">
 
@@ -312,6 +328,6 @@
 </html>
 <!-- 
     TODO:
-    Add option for von Neumann Neighbourhood scoring vs Moore
     Add dead new board button
+    Add unit tests for von Neumann + Moore neighbourhoods
  -->
