@@ -1,0 +1,75 @@
+:root {
+    --board-cols: 1;
+    --board-rows: 1;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+button {
+    background-color: green;
+    border: none;
+    padding: 0.5em;
+    color: white;
+    opacity: 0.9;
+}
+button:hover {
+    opacity: 1;
+}
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#board {
+    width: 40%;
+    display: grid;
+    /* grid-gap: 1em; */
+    grid-template-rows: repeat(var(--board-rows), 1fr);
+    grid-template-columns: repeat(var(--board-cols), 1fr);
+}
+#stopGame {
+    display: none;
+}
+#patterns {
+    display: none;
+}
+
+.cell {
+    padding: 0em;
+    border: 1px solid rgb(235, 235, 235);
+    text-align: center;
+    aspect-ratio: 1;
+}
+.cell-dead {
+    background-color: white;
+}
+.cell-alive {
+    background-color: rgb(129, 129, 129);
+}
+.cell-hover {
+    background-color: rgb(201, 76, 38);
+}
+
+form {
+    padding: 1em;
+}
+form > section {
+    padding: 0.3em;
+}
+input[type=number] {
+    width: 4em;
+    text-align: center;
+}
+select {
+    width: 7em;
+}
+
+#patterns a {
+    background-color: lightgreen;
+    padding: 0.2em;
+}
+
+h1 {
+    margin: 1em 0em 0em 0.5em;
+}
